@@ -1,5 +1,5 @@
 // pages/api/chat.js
-import { GoogleGenerativeAI } from '@google/generative-ai'; // <--- SUDAH DIPERBAIKI: menggunakan 'from'
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export default async function handler(req, res) {
   // Pastikan hanya menerima permintaan POST
@@ -25,8 +25,8 @@ export default async function handler(req, res) {
 
   // Inisialisasi Gemini API
   const genAI = new GoogleGenerativeAI(apiKey);
-  // Pilih model yang ingin Anda gunakan (misalnya 'gemini-pro' untuk teks)
-  const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+  // Pilih model yang ingin Anda gunakan (diperbarui ke gemini-2.5-flash-preview-05-20)
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' }); // <--- BARIS INI DIPERBARUI
 
   try {
     // Mulai sesi chat dengan riwayat yang diberikan
