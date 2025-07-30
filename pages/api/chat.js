@@ -1,5 +1,5 @@
 // pages/api/chat.js
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI } from '@google/generative-ai'; // <--- SUDAH DIPERBAIKI: menggunakan 'from'
 
 export default async function handler(req, res) {
   // Pastikan hanya menerima permintaan POST
