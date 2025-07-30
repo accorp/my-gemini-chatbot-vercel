@@ -56,14 +56,16 @@ export default async function handler(req, res) {
     },
   ];
 
+  // Instruksi sistem yang akan disisipkan ke pesan pengguna
+  const systemInstructionText = "Anda adalah asisten AI yang ramah dan membantu. Selalu berikan respons dalam Bahasa Indonesia yang jelas dan informatif. Gunakan format Markdown untuk keterbacaan yang lebih baik jika sesuai.";
+
   try {
     // Mulai sesi chat dengan riwayat yang diberikan dan konfigurasi baru
     const chat = model.startChat({
       history: history, // Kirim seluruh riwayat sebagai konteks
       generationConfig: generationConfig, // Terapkan konfigurasi generasi
       safetySettings: safetySettings,   // Terapkan pengaturan keamanan
-      // Instruksi sistem untuk memandu perilaku model
-      systemInstruction: "Anda adalah asisten AI yang ramah dan membantu. Selalu berikan respons dalam Bahasa Indonesia yang jelas dan informatif. Gunakan format Markdown untuk keterbacaan yang lebih baik jika sesuai.", // <--- BARIS INI DITAMBAHKAN
+      // systemInstruction: systemInstruction, // <--- BARIS INI DIHAPUS
     });
 
     // Ambil pesan terakhir dari riwayat (pesan pengguna saat ini)
@@ -72,8 +74,11 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: 'Pesan pengguna terakhir tidak valid dalam riwayat.' });
     }
 
-    // Kirim pesan terakhir ke model Gemini dalam konteks chat
-    const result = await chat.sendMessage(lastUserMessage.parts[0].text);
+    // Sisipkan instruksi sistem ke awal pesan pengguna sebelum mengirimkannya ke model
+    const fullUserPrompt = `${systemInstructionText}\n\n${lastUserMessage.parts[0].text}`; // <--- BARIS INI DITAMBAHKAN
+
+    // Kirim pesan terakhir (dengan instruksi sistem) ke model Gemini dalam konteks chat
+    const result = await chat.sendMessage(fullUserPrompt); // <--- MENGGUNAKAN fullUserPrompt
     const response = await result.response;
     const text = response.text(); // Dapatkan teks respons
 
