@@ -62,6 +62,8 @@ export default async function handler(req, res) {
       history: history, // Kirim seluruh riwayat sebagai konteks
       generationConfig: generationConfig, // Terapkan konfigurasi generasi
       safetySettings: safetySettings,   // Terapkan pengaturan keamanan
+      // Instruksi sistem untuk memandu perilaku model
+      systemInstruction: "Anda adalah asisten AI yang ramah dan membantu. Selalu berikan respons dalam Bahasa Indonesia yang jelas dan informatif. Gunakan format Markdown untuk keterbacaan yang lebih baik jika sesuai.", // <--- BARIS INI DITAMBAHKAN
     });
 
     // Ambil pesan terakhir dari riwayat (pesan pengguna saat ini)
