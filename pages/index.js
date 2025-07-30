@@ -1,5 +1,6 @@
 // pages/index.js
 import React, { useState, useEffect, useRef } from 'react';
+import { marked } from 'marked';
 
 // Main App component for the Gemini Chatbot
 function App() {
@@ -98,10 +99,15 @@ function App() {
                     : 'bg-gray-200 text-gray-800 rounded-bl-none'
                 }`}
               >
-                {/* Display the text part of the message. Each part is an object with a 'text' property. */}
-                {msg.parts && msg.parts.length > 0 && msg.parts.map((part, pIdx) => (
-                  <span key={pIdx}>{part.text}</span>
-                ))}
+                {/* Render Markdown for bot messages, display plain text for user messages */}
+                {msg.role === 'model' && msg.parts && msg.parts.length > 0 ? (
+                  <div
+                    className="prose prose-sm max-w-none text-gray-800 leading-relaxed" // <--- KELAS INI DITAMBAHKAN
+                    dangerouslySetInnerHTML={{ __html: marked.parse(msg.parts[0].text) }}
+                  />
+                ) : (
+                  msg.parts && msg.parts.length > 0 && msg.parts[0].text
+                )}
               </div>
             </div>
           ))}
