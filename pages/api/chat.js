@@ -1,57 +1,131 @@
-// pages/api/chat.js
-import { GoogleGenerativeAI } from '@google/generative-ai';
+// pages/index.js
+import React, { useState, useEffect, useRef } from 'react';
 
-export default async function handler(req, res) {
-  // Pastikan hanya menerima permintaan POST
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method Not Allowed' });
-  }
+function App() {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef(null);
 
-  // Menerima seluruh riwayat percakapan dari frontend
-  const { history } = req.body;
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
-  // Validasi riwayat
-  if (!history || !Array.isArray(history)) {
-    return res.status(400).json({ message: 'Riwayat percakapan diperlukan dan harus berupa array.' });
-  }
+  const sendMessage = async () => {
+    if (!input.trim()) return;
 
-  // Penting: Gunakan variabel lingkungan untuk kunci API
-  const apiKey = process.env.GEMINI_API_KEY;
+    const newMessage = { sender: 'user', text: input };
+    setMessages((prev) => [...prev, newMessage]);
+    setInput('');
+    setLoading(true);
 
-  if (!apiKey) {
-    console.error('GEMINI_API_KEY tidak ditemukan di variabel lingkungan.');
-    return res.status(500).json({ message: 'Kunci API Gemini tidak dikonfigurasi.' });
-  }
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          history: [
+            ...messages.map((msg) => ({
+              role: msg.sender === 'user' ? 'user' : 'model',
+              parts: [{ text: msg.text }],
+            })),
+            {
+              role: 'user',
+              parts: [{ text: newMessage.text }],
+            },
+          ],
+        }),
+      });
 
-  // Inisialisasi Gemini API
-  const genAI = new GoogleGenerativeAI(apiKey);
-  // Pilih model yang ingin Anda gunakan (misalnya 'gemini-pro' untuk teks)
-  const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'API error');
+      }
 
-  try {
-    // Mulai sesi chat dengan riwayat yang diberikan
-    const chat = model.startChat({
-      history: history, // Kirim seluruh riwayat sebagai konteks
-      // Anda bisa menambahkan generationConfig atau safetySettings di sini jika diperlukan
-    });
+      const data = await response.json();
 
-    // Ambil pesan terakhir dari riwayat (pesan pengguna saat ini)
-    // Pastikan ada pesan terakhir dan itu adalah pesan pengguna
-    const lastUserMessage = history[history.length - 1];
-    if (!lastUserMessage || lastUserMessage.role !== 'user' || !lastUserMessage.parts || lastUserMessage.parts.length === 0) {
-      return res.status(400).json({ message: 'Pesan pengguna terakhir tidak valid dalam riwayat.' });
+      // Data format sesuai: { reply: { role: 'model', parts: [{ text: 'balasan' }] } }
+      setMessages((prev) => [
+        ...prev,
+        { sender: 'bot', text: data.reply.parts[0].text },
+      ]);
+    } catch (err) {
+      console.error(err);
+      setMessages((prev) => [
+        ...prev,
+        { sender: 'bot', text: 'Oops! Ada kesalahan. Silakan coba lagi.' },
+      ]);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    // Kirim pesan terakhir ke model Gemini dalam konteks chat
-    const result = await chat.sendMessage(lastUserMessage.parts[0].text);
-    const response = await result.response;
-    const text = response.text(); // Dapatkan teks respons
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-2xl overflow-hidden w-full max-w-lg flex flex-col h-[80vh]">
+        <div className="bg-blue-600 text-white p-4 text-center text-2xl font-bold rounded-t-xl">
+          AC-Komputer AI
+        </div>
 
-    // Kirim respons bot kembali ke frontend dalam format yang sesuai dengan chat history
-    res.status(200).json({ reply: { role: 'model', parts: [{ text: text }] } });
-  } catch (error) {
-    console.error('Kesalahan saat memanggil Gemini API:', error);
-    // Tangani kesalahan dan kirim respons kesalahan
-    res.status(500).json({ message: 'Kesalahan saat memproses permintaan Anda.', error: error.message });
-  }
+        <div className="flex-1 p-6 overflow-y-auto space-y-4">
+          {messages.length === 0 && (
+            <div className="text-center text-gray-500 mt-10">
+              Mulai percakapan dengan Gemini!
+            </div>
+          )}
+          {messages.map((msg, index) => (
+            <div
+              key={index}
+              className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              <div
+                className={`max-w-[75%] p-3 rounded-lg shadow-md ${
+                  msg.sender === 'user'
+                    ? 'bg-blue-500 text-white rounded-br-none'
+                    : 'bg-gray-200 text-gray-800 rounded-bl-none'
+                }`}
+              >
+                {msg.text}
+              </div>
+            </div>
+          ))}
+          {loading && (
+            <div className="flex justify-start">
+              <div className="max-w-[75%] p-3 rounded-lg shadow-md bg-gray-200 text-gray-800 rounded-bl-none">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                  <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                </div>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        <div className="p-4 bg-gray-100 border-t border-gray-200 flex items-center">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+            placeholder="Ketik pesan Anda..."
+            className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={loading}
+          />
+          <button
+            onClick={sendMessage}
+            disabled={loading}
+            className="ml-3 px-6 py-3 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Kirim
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
+
+export default App;
