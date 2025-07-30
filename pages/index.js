@@ -11,12 +11,15 @@ function App() {
   const [input, setInput] = useState('');
   // State to indicate if a message is being processed
   const [loading, setLoading] = useState(false);
-  // Ref for auto-scrolling to the latest message
-  const messagesEndRef = useRef(null);
+  // Ref for the scrollable chat container
+  const chatContainerRef = useRef(null); // <--- BARIS INI DITAMBAHKAN
 
   // Scroll to the bottom of the chat window whenever messages change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatContainerRef.current) {
+      // Menggeser scroll container ke bawah secara langsung
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
   // Function to send a message to the chatbot
@@ -80,7 +83,7 @@ function App() {
         </div>
 
         {/* Message Display Area */}
-        <div className="flex-1 p-6 overflow-y-auto space-y-4">
+        <div ref={chatContainerRef} className="flex-1 p-6 overflow-y-auto space-y-4"> {/* <--- REF DITAMBAHKAN DI SINI */}
           {messages.length === 0 && (
             <div className="text-center text-gray-500 mt-10">
               Mulai percakapan dengan AC-Komputer AI!
@@ -102,7 +105,7 @@ function App() {
                 {/* Render Markdown for bot messages, display plain text for user messages */}
                 {msg.role === 'model' && msg.parts && msg.parts.length > 0 ? (
                   <div
-                    className="prose prose-sm max-w-none text-gray-800 leading-relaxed" // <--- KELAS INI DITAMBAHKAN
+                    className="prose prose-sm max-w-none text-gray-800 leading-relaxed"
                     dangerouslySetInnerHTML={{ __html: marked.parse(msg.parts[0].text) }}
                   />
                 ) : (
@@ -122,7 +125,7 @@ function App() {
               </div>
             </div>
           )}
-          <div ref={messagesEndRef} /> {/* Scroll target */}
+          {/* Removed messagesEndRef as we are scrolling the container directly */}
         </div>
 
         {/* Input Area */}
