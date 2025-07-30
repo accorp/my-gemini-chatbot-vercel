@@ -65,7 +65,7 @@ export default async function handler(req, res) {
       history: history, // Kirim seluruh riwayat sebagai konteks
       generationConfig: generationConfig, // Terapkan konfigurasi generasi
       safetySettings: safetySettings,   // Terapkan pengaturan keamanan
-      // systemInstruction: systemInstruction, // <--- BARIS INI DIHAPUS DARI SINI
+      // Pastikan baris 'systemInstruction' TIDAK ADA di sini sama sekali
     });
 
     // Ambil pesan terakhir dari riwayat (pesan pengguna saat ini)
@@ -75,10 +75,10 @@ export default async function handler(req, res) {
     }
 
     // Sisipkan instruksi sistem ke awal pesan pengguna sebelum mengirimkannya ke model
-    const fullUserPrompt = `${systemInstructionText}\n\n${lastUserMessage.parts[0].text}`; // <--- BARIS INI DITAMBAHKAN
+    const fullUserPrompt = `${systemInstructionText}\n\n${lastUserMessage.parts[0].text}`;
 
     // Kirim pesan terakhir (dengan instruksi sistem) ke model Gemini dalam konteks chat
-    const result = await chat.sendMessage(fullUserPrompt); // <--- MENGGUNAKAN fullUserPrompt
+    const result = await chat.sendMessage(fullUserPrompt);
     const response = await result.response;
     const text = response.text(); // Dapatkan teks respons
 
