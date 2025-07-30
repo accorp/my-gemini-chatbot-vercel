@@ -65,7 +65,9 @@ export default async function handler(req, res) {
       history: history, // Kirim seluruh riwayat sebagai konteks
       generationConfig: generationConfig, // Terapkan konfigurasi generasi
       safetySettings: safetySettings,   // Terapkan pengaturan keamanan
-      // Pastikan baris 'systemInstruction' TIDAK ADA di sini sama sekali
+      // Pastikan baris 'systemInstruction' TIDAK ADA di sini sama sekali.
+      // Baris berikut ini harus DIHAPUS jika masih ada:
+      // systemInstruction: systemInstructionText,
     });
 
     // Ambil pesan terakhir dari riwayat (pesan pengguna saat ini)
